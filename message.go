@@ -7,7 +7,9 @@ package resp
 
 
 import (
+  "bytes"
   "errors"
+  "fmt"
   "strconv"
 )
 
@@ -179,5 +181,29 @@ func (Message *Message) Strings() ([]string, error) {
   }
 
   return result, nil
+}
+
+
+func (Message *Message) ToBytes() []byte {
+
+  var ret []byte
+
+  switch Message.Type {
+  case MessageStatus:
+    ret, _ = EncodeStatus( Message.Status )
+  case MessageError:
+    ret, _ = EncodeError( Message.Error.Error() )
+  case MessageInt:
+    ret, _ = EncodeInt( Message.Integer )
+  case MessageBulk:
+    ret, _ = EncodeBytes( Message.Bulk )
+  case MessageMulti:
+    ret := []byte( fmt.Sprintf( "*%d\r\n", len(Message.Multi) ) )
+    for _, m := range Message.Multi {
+      ret = bytes.Join( [][]byte{ ret, m.ToBytes() }, nil )
+    }
+  }
+
+  return ret
 }
 

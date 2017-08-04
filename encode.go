@@ -30,8 +30,18 @@ func EncodeString( str string ) ( []byte, error ) {
 
 
 func EncodeBytes( data []byte ) ( []byte, error ) {
+  if data == nil {
+    return []byte("$-1\r\n"), nil
+  }
   res := make( []byte, 0, len(data) + 20 )
   return addBytes( res, data ), nil
+}
+
+
+func EncodeInt( val int64 ) ( []byte, error ) {
+  data := make( []byte, 0, 20 )
+  addInt64( data, val )
+  return data, nil
 }
 
 
