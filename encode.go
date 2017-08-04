@@ -39,9 +39,7 @@ func EncodeBytes( data []byte ) ( []byte, error ) {
 
 
 func EncodeInt( val int64 ) ( []byte, error ) {
-  data := make( []byte, 0, 20 )
-  addInt64( data, val )
-  return data, nil
+  return []byte(fmt.Sprintf( ":%d\r\n", val )), nil
 }
 
 
