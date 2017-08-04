@@ -2,7 +2,7 @@ package resp
 
 
 // @author  Mikhail Kirillov <mikkirillov@yandex.ru>
-// @version 1.000
+// @version 1.001
 // @date    2017-08-04
 
 
@@ -17,7 +17,7 @@ const (
   MessageStatus = '+'
   MessageInt    = ':'
   MessageBulk   = '$'
-  MessageMutli  = '*'
+  MessageMulti  = '*'
 )
 
 
@@ -36,6 +36,11 @@ func (Message *Message) IsError() bool {
 }
 
 
+func (Message *Message ) IsList() bool {
+  return Message.Type == MessageMulti
+}
+
+
 func (Message *Message) Bytes() ([]byte, error) {
 
   switch Message.Type {
@@ -47,8 +52,8 @@ func (Message *Message) Bytes() ([]byte, error) {
     return nil, errors.New("Integer Message can not convert to []byte.")
   case MessageBulk:
     return Message.Bulk, nil
-  case MessageMutli:
-    return nil, errors.New("Mutli Message can not convert to []byte.")
+  case MessageMulti:
+    return nil, errors.New("Multi Message can not convert to []byte.")
   }
   return nil, errors.New("Invalid Message type.")
 }
@@ -65,8 +70,8 @@ func (Message *Message) String() (string, error) {
     return "", errors.New("Integer Message can not convert to string.")
   case MessageBulk:
     return string(Message.Bulk), nil
-  case MessageMutli:
-    return "", errors.New("Mutli Message can not convert to string.")
+  case MessageMulti:
+    return "", errors.New("Multi Message can not convert to string.")
   }
   return "", errors.New("Invalid Message type.")
 }
@@ -87,8 +92,8 @@ func (Message *Message) Int64() (int64, error) {
     return Message.Integer, nil
   case MessageBulk:
     return strconv.ParseInt(string(Message.Bulk), 10, 64)
-  case MessageMutli:
-    return 0, errors.New("Mutli Message can not convert to integer.")
+  case MessageMulti:
+    return 0, errors.New("Multi Message can not convert to integer.")
   }
   return 0, errors.New("Invalid Message type.")
 }
@@ -119,15 +124,15 @@ func (Message *Message) Bool() (bool, error) {
     return Message.Integer != 0, nil
   case MessageBulk:
     return strconv.ParseBool(string(Message.Bulk))
-  case MessageMutli:
-    return false, errors.New("Mutli Message can not convert to bool.")
+  case MessageMulti:
+    return false, errors.New("Multi Message can not convert to bool.")
   }
   return false, errors.New("Invalid Message type.")
 }
 
 
 func (Message *Message) StringMap() (map[string]string, error) {
-  if Message.Type != MessageMutli {
+  if Message.Type != MessageMulti {
     return nil, errors.New("Only mutli reponse can convert to [string]string.")
   }
 
@@ -156,7 +161,7 @@ func (Message *Message) StringMap() (map[string]string, error) {
 
 func (Message *Message) Strings() ([]string, error) {
 
-  if Message.Type != MessageMutli {
+  if Message.Type != MessageMulti {
     return nil, errors.New("Only mutli reponse can convert to []string.")
   }
 

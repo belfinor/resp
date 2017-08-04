@@ -72,14 +72,14 @@ func DecodeBufio(r *bufio.Reader) (*Message, error) {
       Type: MessageBulk,
     }, nil
 
-  case MessageMutli:
+  case MessageMulti:
     l, e := strconv.Atoi(string(line[1:]))
     if e != nil {
       return nil, e
     }
 
     if l < 0 {
-      return &Message{Type: MessageMutli}, nil
+      return &Message{Type: MessageMulti}, nil
     }
     ret := make([]*Message, l)
     for i := 0; i < l; i++ {
@@ -90,7 +90,7 @@ func DecodeBufio(r *bufio.Reader) (*Message, error) {
       ret[i] = m
     }
     return &Message{
-      Type:  MessageMutli,
+      Type:  MessageMulti,
       Multi: ret,
     }, nil
   }
