@@ -2,7 +2,7 @@ package resp
 
 
 // @author  Mikhail Kirillov <mikkirillov@yandex.ru>
-// @version 1.000
+// @version 1.001
 // @date    2017-08-04
 
 
@@ -13,7 +13,44 @@ import (
 )
 
 
-func Encode(args ...interface{}) ([]byte, error) {
+func EncodeStatus( status string ) ( []byte, error ) {
+  return []byte( "+" + status + "\r\n" ), nil
+}
+
+
+func EncodeError( err string ) ( []byte, error ) {
+  return []byte( "-" + err + "\r\n" ), nil
+}
+
+
+func EncodeString( str string ) ( []byte, error ) {
+  res := make( []byte, 0, len(str) + 20 )
+  return addBytes( res, []byte(str) ), nil
+}
+
+
+func EncodeBytes( data []byte ) ( []byte, error ) {
+  res := make( []byte, 0, len(data) + 20 )
+  return addBytes( res, data ), nil
+}
+
+
+func EncodeBool( val bool ) ( []byte, error ) {
+  if val {
+    return EncodeBytes( []byte{ '1' } )
+  }
+
+  return EncodeBytes( []byte{ '0' } )
+}
+
+
+func EncodeFloat( val float64 ) ( []byte, error ) {
+  res := make( []byte, 0, 20 )
+  return addFloat( res, val ), nil
+}
+
+
+func EncodeList(args ...interface{}) ([]byte, error) {
 
   argsNum := len(args)
   buf := make([]byte, 0, 10*argsNum)
