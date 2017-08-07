@@ -110,12 +110,14 @@ func (c *Conn) writeLen(prefix byte, n int) error {
   return err
 }
 
+
 func (c *Conn) writeString(s string) error {
   c.writeLen('$', len(s))
   c.bw.WriteString(s)
   _, err := c.bw.WriteString("\r\n")
   return err
 }
+
 
 func (c *Conn) writeBytes(p []byte) error {
   c.writeLen('$', len(p))
@@ -124,13 +126,24 @@ func (c *Conn) writeBytes(p []byte) error {
   return err
 }
 
-func (c *Conn) writeInt64(n int64) error {
-  return c.writeBytes(strconv.AppendInt(c.numScratch[:0], n, 10))
+
+func (c *Conn) writeIntBytes(p []byte) error {
+  c.writeLen(':', len(p))
+  c.bw.Write(p)
+  _, err := c.bw.WriteString("\r\n")
+  return err
 }
+
+
+func (c *Conn) writeInt64(n int64) error {
+  return c.writeIntBytes(strconv.AppendInt(c.numScratch[:0], n, 10))
+}
+
 
 func (c *Conn) writeFloat64(n float64) error {
   return c.writeBytes(strconv.AppendFloat(c.numScratch[:0], n, 'g', -1, 64))
 }
+
 
 func (c *Conn) writeCommand(cmd string, args []interface{}) (err error) {
   c.writeLen('*', 1+len(args))
@@ -315,6 +328,35 @@ func (c *Conn) Send(cmd string, args ...interface{}) error {
   }
   return nil
 }
+
+
+func (c *Conn) SendStatus(status string) error {
+  if c.writeTimeout != 0 {
+    c.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
+  }
+
+  _, err := c.bw.Write( []byte( "+" + status + "\r\n" ) )
+  if err == nil {
+    c.bw.Flush()
+  }
+
+  return err
+}
+
+
+func (c *Conn) SendError(err error) error {
+  if c.writeTimeout != 0 {
+    c.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
+  }
+
+  _, err = c.bw.Write( []byte( "-" + err.Error() + "\r\n" ) )
+  if err == nil {
+    c.bw.Flush()
+  }
+
+  return err
+}
+
 
 func (c *Conn) Flush() error {
   if c.writeTimeout != 0 {
