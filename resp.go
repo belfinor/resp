@@ -9,7 +9,6 @@ import (
   "io"
   "net"
   "strconv"
-  "sync"
   "time"
 )
 
@@ -35,8 +34,6 @@ type Conn struct {
 
   // Scratch space for formatting integers and floats.
   numScratch [40]byte
-
-  sync.Mutex
 }
 
 
@@ -66,30 +63,24 @@ func NewConn(netConn net.Conn) *Conn {
 
 
 func (c *Conn) Close() error {
-  c.Lock()
   err := c.err
   if c.err == nil {
     c.err = errors.New("redigo: closed")
     err = c.conn.Close()
   }
-  c.Unlock()
   return err
 }
 
 func (c *Conn) fatal(err error) error {
-  c.Lock()
   if c.err == nil {
     c.err = err
     c.conn.Close()
   }
-  c.Unlock()
   return err
 }
 
 func (c *Conn) Err() error {
-  c.Lock()
   err := c.err
-  c.Unlock()
   return err
 }
 
@@ -356,9 +347,7 @@ func (c *Conn) readReply() (interface{}, error) {
 }
 
 func (c *Conn) Send(cmd string, args ...interface{}) error {
-  c.Lock()
   c.pending += 1
-  c.Unlock()
   if c.writeTimeout != 0 {
     c.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
   }
@@ -415,11 +404,9 @@ func (c *Conn) Receive() (reply interface{}, err error) {
     return nil, c.fatal(err)
   }
   
-  c.Lock()
   if c.pending > 0 {
     c.pending -= 1
   }
-  c.Unlock()
   if err, ok := reply.(error); ok {
     return nil, err
   }
@@ -428,10 +415,8 @@ func (c *Conn) Receive() (reply interface{}, err error) {
 
 
 func (c *Conn) Do(cmd string, args ...interface{}) (interface{}, error) {
-  c.Lock()
   pending := c.pending
   c.pending = 0
-  c.Unlock()
 
   if cmd == "" && pending == 0 {
     return nil, nil
