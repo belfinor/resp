@@ -18,6 +18,7 @@ type Conn struct {
 
   pending int
   err     error
+  addr    string
   conn    net.Conn
 
   // Read
@@ -46,7 +47,10 @@ func Dial(address string) (*Conn, error) {
     return nil, err
   }
 
-  return NewConn(netConn), nil
+  conn := NewConn(netConn)
+  conn.addr = address
+  
+  return conn, nil
 }
 
 
@@ -237,10 +241,12 @@ func parseInt(p []byte) (interface{}, error) {
   return n, nil
 }
 
+
 var (
   okReply   interface{} = "OK"
   pongReply interface{} = "PONG"
 )
+
 
 func (c *Conn) readReply() (interface{}, error) {
   line, err := c.readLine()
@@ -254,10 +260,8 @@ func (c *Conn) readReply() (interface{}, error) {
   case '+':
     switch {
     case len(line) == 3 && line[1] == 'O' && line[2] == 'K':
-      // Avoid allocation for frequent "+OK" response.
       return okReply, nil
     case len(line) == 5 && line[1] == 'P' && line[2] == 'O' && line[3] == 'N' && line[4] == 'G':
-      // Avoid allocation in PING command benchmarks :)
       return pongReply, nil
     default:
       return string(line[1:]), nil
