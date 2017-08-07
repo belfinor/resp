@@ -59,8 +59,8 @@ func NewConn(netConn net.Conn) *Conn {
     conn:         netConn,
     bw:           bufio.NewWriter(netConn),
     br:           bufio.NewReader(netConn),
-    readTimeout:  30,
-    writeTimeout: 5,
+    readTimeout:  30 * time.Second,
+    writeTimeout: 5 * time.Second,
   }
 }
 
@@ -344,6 +344,7 @@ func (c *Conn) Receive() (reply interface{}, err error) {
   }
   return
 }
+
 
 func (c *Conn) Do(cmd string, args ...interface{}) (interface{}, error) {
   c.Lock()
