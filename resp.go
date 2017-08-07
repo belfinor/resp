@@ -145,6 +145,45 @@ func (c *Conn) writeFloat64(n float64) error {
 }
 
 
+func (c *Conn) Write( arg interface{} ) ( err error ) {
+
+  switch arg := arg.(type) {
+  case string:
+    err = c.writeString(arg)
+  case []byte:
+    err = c.writeBytes(arg)
+  case int:
+    err = c.writeInt64(int64(arg))
+  case int64:
+    err = c.writeInt64(arg)
+  case float64:
+    err = c.writeFloat64(arg)
+  case bool:
+    if arg {
+      err = c.writeString("1")
+    } else {
+      err = c.writeString("0")
+    }
+  case nil:
+    err = c.writeString("")
+  case []interface{}:
+    c.writeLen('*', 1+len(arg))
+    for _, v := range arg {
+      err = c.Write( v )
+      if err != nil {
+        return err
+      }
+    }
+  default:
+    var buf bytes.Buffer
+    fmt.Fprint(&buf, arg)
+    err = c.writeBytes(buf.Bytes())
+  }
+
+  return err
+}
+
+
 func (c *Conn) writeCommand(cmd string, args []interface{}) (err error) {
   c.writeLen('*', 1+len(args))
   err = c.writeString(cmd)
